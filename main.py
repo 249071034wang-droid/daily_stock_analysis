@@ -1361,7 +1361,7 @@ def _run_alphasift(config: Config, args) -> Optional[str]:
 
     # 延迟导入，避免未安装时崩溃
     try:
-        from alphasift.dsa_adapter import get_status, strategies, screen
+        from alphasift.dsa_adapter import get_status, list_strategies, screen
     except ImportError as e:
         logger.warning(f"AlphaSift 未安装，跳过: {e}")
         return None
@@ -1369,7 +1369,7 @@ def _run_alphasift(config: Config, args) -> Optional[str]:
     # 检查可用性
     try:
         status = get_status()
-        if not status.get("available"):
+        if not status.get("available", True):
             diag = status.get("diagnostics", {})
             logger.warning(f"AlphaSift 不可用: {diag}")
             return None
@@ -1380,28 +1380,19 @@ def _run_alphasift(config: Config, args) -> Optional[str]:
 
     # 获取策略列表
     try:
-        strats = strategies()
+        strats = list_strategies()
         if not strats:
             logger.warning("AlphaSift 无可用策略")
             return None
-        strategy_id = strats[0].get("id", "default")
+        strategy_id = strats[0].get("id") if isinstance(strats[0], dict) else str(strats[0])
         logger.info(f"AlphaSift 使用策略: {strategy_id}")
     except Exception as e:
         logger.error(f"获取 AlphaSift 策略失败: {e}")
         return None
 
-    # 执行选股
+    # 执行选股（API签名: screen(strategy, market, max_results)）
     try:
-        candidates = screen(
-            strategy=strategy_id,
-            top_n=10,
-            context={
-                "dsa": {
-                    "realtime_source_priority": ["tencent", "akshare_sina", "efinance"],
-                    "enable_cache": True,
-                }
-            }
-        )
+        candidates = screen(strategy=strategy_id or "default", market="cn", max_results=10)
     except Exception as e:
         logger.error(f"AlphaSift 选股失败: {e}")
         import traceback
@@ -1412,7 +1403,10 @@ def _run_alphasift(config: Config, args) -> Optional[str]:
         logger.info("AlphaSift 未返回候选股票")
         return None
 
-    logger.info(f"AlphaSift 选出 {len(candidates)} 只候选股票")
+    # 统一结果格式（可能是 dict / list / dataclass）
+    raw_list = candidates.get("candidates", []) if isinstance(candidates, dict) else \
+               list(candidates) if hasattr(candidates, "__iter__") else []
+    logger.info(f"AlphaSift 选出 {len(raw_list)} 只候选股票")
 
     # 格式化为 Markdown
     from datetime import datetime
@@ -1431,12 +1425,14 @@ def _run_alphasift(config: Config, args) -> Optional[str]:
         "",
     ]
 
-    for i, c in enumerate(candidates, 1):
-        code = c.get("code", "N/A")
-        name = c.get("name", code)
-        score = c.get("score", "N/A")
-        reason = c.get("reason", "")
-        industry = c.get("industry", "")
+    for i, c in enumerate(raw_list, 1):
+        # 兼容 dict / dataclass
+        item = c if isinstance(c, dict) else (c.__dict__ if hasattr(c, "__dict__") else {})
+        code = item.get("code", "N/A")
+        name = item.get("name", code) or code
+        score = item.get("score", "N/A")
+        reason = item.get("reason", "")
+        industry = item.get("industry", "")
         hot_topic = c.get("hot_topic", "")
 
         lines.append(f"### {i}. {name}（`{code}`）")
