@@ -416,6 +416,12 @@ def parse_arguments() -> argparse.Namespace:
         help='强制回测（即使已有回测结果也重新计算）'
     )
 
+    parser.add_argument(
+        '--alphasift',
+        action='store_true',
+        help='启用 AlphaSift 选股引擎，分析全市场活跃股票'
+    )
+
     return parser.parse_args()
 
 
@@ -1305,6 +1311,11 @@ def main() -> int:
         # 模式3: 正常单次运行
         if config.run_immediately:
             run_full_analysis(config, args, stock_codes)
+
+            # AlphaSift 选股（如果启用）
+            alphasift_report = _run_alphasift(config, args)
+            if alphasift_report:
+                logger.info(f"AlphaSift 报告已生成: {alphasift_report}")
         else:
             logger.info("配置为不立即运行分析 (RUN_IMMEDIATELY=false)")
 
@@ -1329,6 +1340,131 @@ def main() -> int:
     except Exception as e:
         logger.exception(f"程序执行失败: {e}")
         return 1
+
+
+# ---------------------------------------------------------------------------
+# AlphaSift 选股（独立函数，便于维护）
+# ---------------------------------------------------------------------------
+
+def _run_alphasift(config: Config, args) -> Optional[str]:
+    """
+    运行 AlphaSift 选股引擎，生成 Markdown 报告。
+    当 --alphasift 或 ALPHASIFT_ENABLED=true 时生效。
+    返回报告文件路径；失败时返回 None。
+    """
+    enabled = getattr(args, "alphasift", False) or \
+              (os.getenv("ALPHASIFT_ENABLED", "false").lower() == "true")
+    if not enabled:
+        return None
+
+    logger.info("📊 开始运行 AlphaSift 选股...")
+
+    # 延迟导入，避免未安装时崩溃
+    try:
+        from alphasift.dsa_adapter import get_status, strategies, screen
+    except ImportError as e:
+        logger.warning(f"AlphaSift 未安装，跳过: {e}")
+        return None
+
+    # 检查可用性
+    try:
+        status = get_status()
+        if not status.get("available"):
+            diag = status.get("diagnostics", {})
+            logger.warning(f"AlphaSift 不可用: {diag}")
+            return None
+        logger.info(f"AlphaSift 状态: {status.get('version', 'unknown')}")
+    except Exception as e:
+        logger.warning(f"AlphaSift 状态检查失败: {e}")
+        return None
+
+    # 获取策略列表
+    try:
+        strats = strategies()
+        if not strats:
+            logger.warning("AlphaSift 无可用策略")
+            return None
+        strategy_id = strats[0].get("id", "default")
+        logger.info(f"AlphaSift 使用策略: {strategy_id}")
+    except Exception as e:
+        logger.error(f"获取 AlphaSift 策略失败: {e}")
+        return None
+
+    # 执行选股
+    try:
+        candidates = screen(
+            strategy=strategy_id,
+            top_n=10,
+            context={
+                "dsa": {
+                    "realtime_source_priority": ["tencent", "akshare_sina", "efinance"],
+                    "enable_cache": True,
+                }
+            }
+        )
+    except Exception as e:
+        logger.error(f"AlphaSift 选股失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+    if not candidates:
+        logger.info("AlphaSift 未返回候选股票")
+        return None
+
+    logger.info(f"AlphaSift 选出 {len(candidates)} 只候选股票")
+
+    # 格式化为 Markdown
+    from datetime import datetime
+    today = datetime.now()
+    date_str = today.strftime("%Y-%m-%d")
+    lines = [
+        f"# 📊 AlphaSift 选股报告 {date_str}",
+        "",
+        f"- 策略: `{strategy_id}`",
+        f"- 候选数: **{len(candidates)}** 只",
+        f"- 生成时间: {today.strftime('%Y-%m-%d %H:%M:%S')}",
+        "",
+        "---",
+        "",
+        "## 候选股票",
+        "",
+    ]
+
+    for i, c in enumerate(candidates, 1):
+        code = c.get("code", "N/A")
+        name = c.get("name", code)
+        score = c.get("score", "N/A")
+        reason = c.get("reason", "")
+        industry = c.get("industry", "")
+        hot_topic = c.get("hot_topic", "")
+
+        lines.append(f"### {i}. {name}（`{code}`）")
+        lines.append(f"- 评分: **{score}**")
+        if industry:
+            lines.append(f"- 所属行业: {industry}")
+        if hot_topic:
+            lines.append(f"- 热点题材: {hot_topic}")
+        if reason:
+            lines.append(f"- 入选理由: {reason}")
+        lines.append("")
+
+    content = "\n".join(lines)
+
+    # 保存到 reports/
+    os.makedirs("reports", exist_ok=True)
+    date_str2 = today.strftime("%Y%m%d")
+    path = f"reports/alphasift_{date_str2}.md"
+
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        logger.info(f"✅ AlphaSift 报告已保存: {path}")
+    except Exception as e:
+        logger.error(f"保存 AlphaSift 报告失败: {e}")
+        return None
+
+    return path
 
 
 if __name__ == "__main__":
