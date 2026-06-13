@@ -94,6 +94,11 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           DEEPSEEK_API_KEYS: ${{ secrets.DEEPSEEK_API_KEYS }}
           
+          # =========================================
+          # 功能开关
+          # =========================================
+          ALPHASIFT_ENABLED: ${{ vars.ALPHASIFT_ENABLED || 'false' }}
+          
           # Anthropic / Claude
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ANTHROPIC_API_KEYS: ${{ secrets.ANTHROPIC_API_KEYS }}
@@ -463,11 +468,11 @@ jobs:
 
           # 执行分析
           if [ "$MODE" = "market-only" ]; then
-            python main.py --market-review $FORCE_RUN_ARG
+            python main.py --market-review $FORCE_RUN_ARG --alphasift
           elif [ "$MODE" = "stocks-only" ]; then
-            python main.py --no-market-review $FORCE_RUN_ARG
+            python main.py --no-market-review $FORCE_RUN_ARG --alphasift
           else
-            python main.py $FORCE_RUN_ARG
+            python main.py $FORCE_RUN_ARG --alphasift
           fi
       
       - name: 上传分析报告
