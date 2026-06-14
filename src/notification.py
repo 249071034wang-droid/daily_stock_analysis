@@ -2421,6 +2421,7 @@ class NotificationService(
         severity: Optional[str] = None,
         dedup_key: Optional[str] = None,
         cooldown_key: Optional[str] = None,
+        results: Optional[List[AnalysisResult]] = None,
     ) -> bool:
         """
         统一发送接口 - 向所有已配置的渠道发送。
@@ -2436,6 +2437,7 @@ class NotificationService(
             severity=severity,
             dedup_key=dedup_key,
             cooldown_key=cooldown_key,
+            results=results,
         )
         return bool(result.success)
    

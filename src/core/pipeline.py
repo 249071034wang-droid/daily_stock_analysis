@@ -2670,6 +2670,7 @@ class StockAnalysisPipeline:
                     severity="info",
                     dedup_key=f"report:single:{stock_code}:{report_type.value}",
                     cooldown_key=f"report:single:{stock_code}:{report_type.value}",
+                    results=[result],
                 )
                 notification_run = self._build_notification_run_snapshot(
                     channel="report",
@@ -3070,9 +3071,16 @@ class StockAnalysisPipeline:
                             channel_error,
                         )
                     elif channel == NotificationChannel.PUSHPLUS:
+                        def _send_pushplus_report() -> bool:
+                            # 尝试使用 HTML 卡片模板渲染
+                            html_report = self.notifier.generate_pushplus_html_report(results)
+                            if html_report:
+                                logger.info("PushPlus 使用 HTML 卡片模板（%d字符）", len(html_report))
+                                return self.notifier.send_to_pushplus(html_report)
+                            return self.notifier.send_to_pushplus(report)
                         channel_success, channel_error = _send_channel_safely(
                             channel.value,
-                            lambda: self.notifier.send_to_pushplus(report),
+                            _send_pushplus_report,
                         )
                         non_wechat_success = channel_success or non_wechat_success
                         _record_channel_result(
