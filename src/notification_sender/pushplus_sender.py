@@ -104,7 +104,7 @@ class PushplusSender:
             "token": self._pushplus_token,
             "title": title,
             "content": content,
-            "template": "markdown",
+            "template": "html",
         }
 
         if self._pushplus_topic:

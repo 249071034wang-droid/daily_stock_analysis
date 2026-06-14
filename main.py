@@ -1316,6 +1316,19 @@ def main() -> int:
             alphasift_report = _run_alphasift(config, args)
             if alphasift_report:
                 logger.info(f"AlphaSift 报告已生成: {alphasift_report}")
+                # 推送 AlphaSift 报告到已配置渠道
+                try:
+                    with open(alphasift_report, "r", encoding="utf-8") as f:
+                        report_content = f.read()
+                    from src.notification import NotificationService
+                    ns = NotificationService()
+                    if ns.is_available():
+                        ns.send(report_content)
+                        logger.info("✅ AlphaSift 报告已推送")
+                    else:
+                        logger.warning("通知服务不可用，AlphaSift 报告未推送")
+                except Exception as e:
+                    logger.error(f"AlphaSift 报告推送失败: {e}")
         else:
             logger.info("配置为不立即运行分析 (RUN_IMMEDIATELY=false)")
 

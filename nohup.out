@@ -1,0 +1,49 @@
+2026-06-13 23:46:55,450 [WARNING] src.config: Deprecation warning:
+deepseek-chat will be deprecated on 2026-07-24,
+please migrate to deepseek-v4-flash.
+2026-06-13 23:46:55 | INFO     | root | src\logging_config.py:188 | 日志系统初始化完成，日志目录: logs
+2026-06-13 23:46:55 | INFO     | root | src\logging_config.py:189 | 常规日志: logs\stock_analysis_20260613.log
+2026-06-13 23:46:55 | INFO     | root | src\logging_config.py:190 | 调试日志: logs\stock_analysis_debug_20260613.log
+2026-06-13 23:46:55 | INFO     | __main__ | main.py:1130 | ============================================================
+2026-06-13 23:46:55 | INFO     | __main__ | main.py:1131 | A股自选股智能分析系统 启动
+2026-06-13 23:46:55 | INFO     | __main__ | main.py:1132 | 运行时间: 2026-06-13 23:46:55
+2026-06-13 23:46:55 | INFO     | __main__ | main.py:1133 | ============================================================
+2026-06-13 23:46:55 | WARNING  | __main__ | main.py:1138 | 未配置 Tushare Token，将使用其他数据源
+2026-06-13 23:46:55 | INFO     | src.webui_frontend | src\webui_frontend.py:199 | 检测到可直接复用的前端静态产物，跳过运行时自动构建: D:\AI Agent\daily_stock_analysis\static\index.html
+2026-06-13 23:46:55 | INFO     | __main__ | main.py:1010 | FastAPI 服务已启动: http://127.0.0.1:8000
+2026-06-13 23:46:55 | INFO     | __main__ | main.py:1195 | 模式: 仅 Web 服务
+2026-06-13 23:46:55 | INFO     | __main__ | main.py:1196 | Web 服务运行中: http://127.0.0.1:8000
+2026-06-13 23:46:55 | INFO     | __main__ | main.py:1197 | 通过 /api/v1/analysis/analyze 接口触发分析
+2026-06-13 23:46:55 | INFO     | __main__ | main.py:1198 | API 文档: http://127.0.0.1:8000/docs
+2026-06-13 23:46:55 | INFO     | __main__ | main.py:1199 | 按 Ctrl+C 退出...
+2026-06-13 23:47:13 | INFO     | uvicorn.error | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\server.py:83 | Started server process [33884]
+2026-06-13 23:47:13 | INFO     | uvicorn.error | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\lifespan\on.py:48 | Waiting for application startup.
+2026-06-13 23:47:13 | INFO     | uvicorn.error | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\lifespan\on.py:62 | Application startup complete.
+2026-06-13 23:47:13 | INFO     | uvicorn.error | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\server.py:215 | Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+2026-06-13 23:47:14 | INFO     | src.services.task_queue | src\services\task_queue.py:201 | [TaskQueue] 初始化完成，最大并发: 3
+2026-06-13 23:47:14 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:52711 - "GET /api/v1/analysis/tasks/stream HTTP/1.1" 200
+2026-06-13 23:47:14 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53652 - "GET /api/v1/analysis/tasks?status=pending,processing,cancel_requested&limit=100 HTTP/1.1" 200
+2026-06-13 23:47:15 | INFO     | src.storage | src\storage.py:936 | 数据库初始化完成: sqlite:///D:\AI Agent\daily_stock_analysis\data\stock_analysis.db
+2026-06-13 23:47:15 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53652 - "GET /api/v1/history/43 HTTP/1.1" 200
+2026-06-13 23:47:15 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53652 - "GET /api/v1/history/43/news?limit=8 HTTP/1.1" 200
+2026-06-13 23:47:15 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:50264 - "GET /api/v1/history/43/diagnostics HTTP/1.1" 200
+2026-06-13 23:47:17 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:50264 - "GET /api/v1/history/45 HTTP/1.1" 200
+2026-06-13 23:47:17 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53652 - "GET /api/v1/history/45/diagnostics HTTP/1.1" 200
+2026-06-13 23:47:17 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:50264 - "GET /api/v1/history/45/news?limit=8 HTTP/1.1" 200
+2026-06-13 23:47:21 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:50264 - "GET /api/v1/alphasift/status HTTP/1.1" 200
+2026-06-13 23:47:21 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53652 - "GET /api/v1/alphasift/hotspots?provider=akshare&top=12&refresh=false HTTP/1.1" 200
+2026-06-13 23:47:21 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:50264 - "GET /api/v1/alphasift/strategies HTTP/1.1" 200
+2026-06-13 23:47:23 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:50264 - "GET /screening HTTP/1.1" 200
+2026-06-13 23:47:23 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:50264 - "GET /api/v1/auth/status HTTP/1.1" 200
+2026-06-13 23:47:23 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53652 - "GET /vite.svg HTTP/1.1" 200
+2026-06-13 23:47:23 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53652 - "GET /api/v1/alphasift/status HTTP/1.1" 200
+2026-06-13 23:47:24 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53652 - "GET /api/v1/alphasift/status HTTP/1.1" 200
+2026-06-13 23:47:24 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:50264 - "GET /api/v1/alphasift/hotspots?provider=akshare&top=12&refresh=false HTTP/1.1" 200
+2026-06-13 23:47:24 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53652 - "GET /api/v1/alphasift/strategies HTTP/1.1" 200
+  0%|          | 0/39 [00:00<?, ?it/s]  5%|▌         | 2/39 [00:00<00:02, 12.91it/s] 10%|█         | 4/39 [00:02<00:30,  1.16it/s] 15%|█▌        | 6/39 [00:03<00:16,  1.97it/s] 21%|██        | 8/39 [00:03<00:10,  3.05it/s] 26%|██▌       | 10/39 [00:03<00:06,  4.36it/s] 31%|███       | 12/39 [00:03<00:04,  5.81it/s] 36%|███▌      | 14/39 [00:03<00:03,  7.49it/s] 41%|████      | 16/39 [00:03<00:02,  9.12it/s] 46%|████▌     | 18/39 [00:03<00:01, 10.51it/s] 51%|█████▏    | 20/39 [00:03<00:01, 11.80it/s] 56%|█████▋    | 22/39 [00:04<00:01, 13.02it/s] 62%|██████▏   | 24/39 [00:04<00:01, 13.96it/s] 67%|██████▋   | 26/39 [00:04<00:00, 14.96it/s] 72%|███████▏  | 28/39 [00:04<00:00, 15.68it/s] 77%|███████▋  | 30/39 [00:04<00:00, 16.21it/s] 82%|████████▏ | 32/39 [00:04<00:00, 15.82it/s] 87%|████████▋ | 34/39 [00:04<00:00, 16.58it/s] 92%|█████████▏| 36/39 [00:04<00:00, 15.53it/s] 97%|█████████▋| 38/39 [00:05<00:00, 15.79it/s]                                                 0%|          | 0/39 [00:00<?, ?it/s]  8%|▊         | 3/39 [00:00<00:01, 29.89it/s]2026-06-13 23:47:31 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53000 - "GET /screening HTTP/1.1" 200
+2026-06-13 23:47:31 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53000 - "GET /api/v1/auth/status HTTP/1.1" 200
+2026-06-13 23:47:31 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53000 - "GET /api/v1/alphasift/status HTTP/1.1" 200
+                                              2026-06-13 23:47:32 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53000 - "GET /api/v1/alphasift/status HTTP/1.1" 200
+2026-06-13 23:47:32 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:56941 - "GET /api/v1/alphasift/hotspots?provider=akshare&top=12&refresh=false HTTP/1.1" 200
+2026-06-13 23:47:32 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:53000 - "GET /api/v1/alphasift/strategies HTTP/1.1" 200
+  0%|          | 0/39 [00:00<?, ?it/s]  8%|▊         | 3/39 [00:00<00:01, 26.08it/s]                                              2026-06-13 23:47:39 | INFO     | uvicorn.access | C:\Users\24907\AppData\Roaming\Python\Python313\site-packages\uvicorn\protocols\http\httptools_impl.py:476 | 127.0.0.1:56941 - "GET /api/v1/alphasift/hotspots/%E9%92%BC?provider=akshare HTTP/1.1" 200

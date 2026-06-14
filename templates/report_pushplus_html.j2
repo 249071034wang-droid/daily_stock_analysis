@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ report_date }} 股票分析报告</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; background:#f5f6fa; color:#2d2926; font-size:14px; }
+.container { max-width:600px; margin:0 auto; background:#fff; }
+.header { background:linear-gradient(135deg,#1a73e8,#4a90d9); color:#fff; padding:16px 18px 14px; border-bottom:3px solid #e8a838; }
+.header h1 { font-size:18px; font-weight:900; margin:0; }
+.header .sub { margin-top:6px; font-size:11px; opacity:0.85; font-weight:600; }
+.card { background:#fff; border:1.5px solid #e0e0e0; border-radius:8px; margin:10px 12px; padding:12px 14px; position:relative; }
+.card.top3 { border-color:#e91e63; box-shadow:0 2px 8px rgba(233,30,99,0.12); }
+.card-top { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.rank { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; color:#fff; flex-shrink:0; }
+.rank.r1 { background:#e91e63; }
+.rank.r2 { background:#ff5722; }
+.rank.r3 { background:#ff9800; }
+.rank.rn { background:#b0b0b0; color:#fff; }
+.stock-name { font-size:15px; font-weight:900; color:#1a1a1a; }
+.stock-code { font-size:10px; color:#888; font-weight:600; margin-left:2px; }
+.tags { margin-left:auto; display:flex; gap:4px; flex-wrap:wrap; }
+.tag { font-size:9px; font-weight:700; padding:2px 7px; border-radius:3px; }
+.tag.ind { background:#e8f5e9; color:#2e7d32; }
+.tag.theme { background:#fff3e0; color:#e65100; }
+.score { font-size:22px; font-weight:900; color:#e91e63; margin-left:8px; flex-shrink:0; }
+.metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin-bottom:8px; background:#fafafa; border-radius:6px; padding:8px 6px; }
+.metric { text-align:center; }
+.metric .val { font-size:12px; font-weight:800; color:#2d2926; }
+.metric .val.up { color:#c62828; }
+.metric .val.down { color:#2e7d32; }
+.metric .lbl { font-size:9px; color:#888; font-weight:600; }
+.reason { font-size:12px; color:#444; line-height:1.5; margin-bottom:6px; padding:6px 8px; background:#f8f9ff; border-radius:5px; border-left:3px solid #1a73e8; }
+.style-cat { font-size:11px; margin-bottom:5px; }
+.style-cat b { color:#9c27b0; }
+.risks { font-size:11px; color:#c62828; margin-bottom:5px; padding:4px 7px; background:#fff5f5; border-radius:4px; }
+.factor-bars { display:flex; flex-direction:column; gap:3px; margin-top:6px; }
+.f-row { display:flex; align-items:center; gap:5px; }
+.f-lbl { font-size:9px; color:#666; width:32px; flex-shrink:0; font-weight:600; text-align:right; }
+.f-bar-bg { flex:1; height:7px; background:#eee; border-radius:4px; overflow:hidden; }
+.f-bar { height:100%; border-radius:4px; }
+.f-val { font-size:9px; color:#555; width:24px; font-weight:700; text-align:right; }
+.footer { text-align:center; font-size:11px; color:#999; padding:12px; border-top:1px solid #eee; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>📈 {{ report_date }} 决策仪表盘</h1>
+    <div class="sub">共分析 {{ results|length }} 只 | 🟢买入:{{ buy_count }} 🟡观望:{{ hold_count }} 🔴卖出:{{ sell_count }}</div>
+  </div>
+
+  {% for e in enriched %}
+  {% set result = e.result %}
+  {% set dashboard = result.dashboard if result.dashboard else {} %}
+  {% set core = dashboard.get('core_conclusion') or {} %}
+  {% set battle = dashboard.get('battle_plan') or {} %}
+  {% set intel = dashboard.get('intelligence') or {} %}
+  {% set i = loop.index %}
+  {% set is_top3 = i <= 3 %}
+
+  <div class="card{% if is_top3 %} top3{% endif %}">
+    <div class="card-top">
+      <div class="rank{% if i == 1 %} r1{% elif i == 2 %} r2{% elif i == 3 %} r3{% else %} rn{% endif %}">{{ i }}</div>
+      <span class="stock-name">{{ e.stock_name }}</span><span class="stock-code">({{ result.code }})</span>
+      <div class="tags" style="margin-left:auto;">
+        {% if intel.get('industry') %}<span class="tag ind">{{ intel.industry }}</span>{% endif %}
+        {% if intel.get('theme') %}<span class="tag theme">{{ intel.theme }}</span>{% endif %}
+      </div>
+      <span class="score">{{ (result.sentiment_score|int) if result.sentiment_score else '-' }}</span>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="val{% if (result.change_pct or 0) > 0 %} up{% elif (result.change_pct or 0) < 0 %} down{% endif %}">
+          {{ "{:+.1f}%".format(result.change_pct) if result.change_pct else '-' }}
+        </div>
+        <div class="lbl">涨幅</div>
+      </div>
+      <div class="metric">
+        <div class="val">{{ "{:.2f}".format(result.volume_ratio) if result.volume_ratio else '-' }}</div>
+        <div class="lbl">量比</div>
+      </div>
+      <div class="metric">
+        <div class="val">{{ "{:.1f}亿".format(result.amount/1e8) if result.amount else '-' }}</div>
+        <div class="lbl">金额</div>
+      </div>
+      <div class="metric">
+        <div class="val">{{ "{:.1f}".format(result.pe_ratio) if result.pe_ratio else '-' }}</div>
+        <div class="lbl">PE</div>
+      </div>
+    </div>
+
+    {% set one_sentence = core.get('one_sentence', result.analysis_summary) if core else result.analysis_summary %}
+    {% if one_sentence %}
+    <div class="reason">📌 {{ one_sentence[:100] }}</div>
+    {% endif %}
+
+    <div class="style-cat">
+      {% if intel.get('style_fit') %}<b style="color:#9c27b0;">风格:</b> {{ intel.style_fit[:30] }} &nbsp; {% endif %}
+      {% if intel.get('positive_catalysts') %}<b style="color:#ff9800;">催化:</b> {{ intel.positive_catalysts[0][:25] if intel.positive_catalysts else '' }}{% endif %}
+    </div>
+
+    {% if intel.get('risk_alerts') %}
+    <div class="risks">⚠️ 风险: {{ intel.risk_alerts[0][:35] if intel.risk_alerts else '' }}</div>
+    {% endif %}
+
+    {% set factor_scores = dashboard.get('factor_scores') or {} %}
+    {% if factor_scores %}
+    <div class="factor-bars">
+      {% for lbl, key, color in [('价值','value','#4caf50'),('流动','liquidity','#2196f3'),('动量','momentum','#ff9800'),('活跃','activity','#00bcd4'),('稳定','stability','#8bc34a'),('市值','size','#ff5722')] %}
+      {% set v = (factor_scores.get(key, 0) or 0)|int %}
+      <div class="f-row">
+        <span class="f-lbl">{{ lbl }}</span>
+        <div class="f-bar-bg"><div class="f-bar" style="width:{{ v }}%;background:{{ color }};"></div></div>
+        <span class="f-val">{{ v }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <div class="footer">
+    {{ report_timestamp[11:16] if report_timestamp else '' }} | {{ models_used[0] if models_used else '' }}
+  </div>
+</div>
+</body>
+</html>

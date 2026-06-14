@@ -1501,6 +1501,39 @@ class NotificationService(
 
         return content
 
+    def generate_pushplus_html_report(
+        self,
+        results: List[AnalysisResult],
+        report_date: Optional[str] = None,
+    ) -> Optional[str]:
+        """
+        生成 PushPlus HTML 卡片式报告（使用 report_pushplus_html.j2 模板）
+
+        Args:
+            results: 分析结果列表
+            report_date: 报告日期（默认今天）
+
+        Returns:
+            HTML 格式的报告内容，失败时返回 None
+        """
+        config = get_config()
+        if not getattr(config, 'report_renderer_enabled', False):
+            return None
+        if not results:
+            return None
+        from src.services.report_renderer import render
+        report_language = self._get_report_language(results)
+        return render(
+            platform='pushplus_html',
+            results=results,
+            report_date=report_date,
+            summary_only=self._report_summary_only,
+            extra_context={
+                **self._get_history_compare_context(results),
+                "report_language": report_language,
+            },
+        )
+
     def generate_wechat_summary(self, results: List[AnalysisResult]) -> str:
         """
         生成企业微信精简版日报（控制在4000字符内）
@@ -2166,6 +2199,7 @@ class NotificationService(
         severity: Optional[str] = None,
         dedup_key: Optional[str] = None,
         cooldown_key: Optional[str] = None,
+        results: Optional[List[AnalysisResult]] = None,
     ) -> NotificationDispatchResult:
         """
         Send a notification and return per-channel diagnostics.
@@ -2309,12 +2343,20 @@ class NotificationService(
         channel_results: List[ChannelAttemptResult] = []
 
         for channel in target_channels:
+            # PushPlus：使用独立 HTML 模板渲染卡片式报告
+            channel_content = content
+            if channel == NotificationChannel.PUSHPLUS and results:
+                html_content = self.generate_pushplus_html_report(results)
+                if html_content:
+                    channel_content = html_content
+                    logger.info("PushPlus 使用 HTML 卡片模板渲染报告（%d字符）", len(html_content))
+
             channel_name = ChannelDetector.get_channel_name(channel)
             started_at = time.monotonic()
             try:
                 result = self._send_to_static_channel(
                     channel,
-                    content,
+                    channel_content,
                     image_bytes=image_bytes,
                     email_stock_codes=email_stock_codes,
                     email_send_to_all=email_send_to_all,
