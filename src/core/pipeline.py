@@ -3077,6 +3077,11 @@ class StockAnalysisPipeline:
                             if html_report:
                                 logger.info("PushPlus 使用 HTML 卡片模板（%d字符）", len(html_report))
                                 return self.notifier.send_to_pushplus(html_report)
+                            # 兜底：Markdown → HTML 卡片包装
+                            wrapped = self.notifier.wrap_markdown_as_html_card("📈 个股决策仪表盘", report)
+                            if wrapped:
+                                logger.info("PushPlus 使用 Markdown→HTML 包装（%d字符）", len(wrapped))
+                                return self.notifier.send_to_pushplus(wrapped)
                             return self.notifier.send_to_pushplus(report)
                         channel_success, channel_error = _send_channel_safely(
                             channel.value,

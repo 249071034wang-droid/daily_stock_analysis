@@ -1534,6 +1534,104 @@ class NotificationService(
             },
         )
 
+    @staticmethod
+    def wrap_markdown_as_html_card(title: str, content: str) -> str:
+        """
+        将纯 Markdown 文本包装为 PushPlus HTML 卡片格式。
+        用于大盘复盘、AlphaSift 选股报告等非 AnalysisResult 类型的推送内容。
+
+        Args:
+            title: 报告标题（如 "📈 大盘复盘"）
+            content: Markdown 格式的文本内容
+
+        Returns:
+            包装后的 HTML 字符串
+        """
+        import re
+
+        def _md_to_html(md: str) -> str:
+            """简单的 Markdown → HTML 转换（支持标题/加粗/列表/表格/引用）"""
+            html = md
+            # HTML 转义（先处理，防止 XSS）
+            html = html.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            # 标题 ## / ### → h2/h3
+            html = re.sub(r'^### (.+)$', r'<h3 style="font-size:14px;font-weight:800;color:#1565c0;margin:12px 0 6px;padding-bottom:4px;border-bottom:2px solid #e3f2fd">\1</h3>', html, flags=re.MULTILINE)
+            html = re.sub(r'^## (.+)$', r'<h2 style="font-size:16px;font-weight:900;color:#1a237e;margin:14px 0 8px">\1</h2>', html, flags=re.MULTILINE)
+            html = re.sub(r'^# (.+)$', r'<h1 style="font-size:18px;font-weight:900;color:#d32f2f;margin:14px 0 8px">\1</h1>', html, flags=re.MULTILINE)
+            # 加粗 **text** → <b>
+            html = re.sub(r'\*\*(.+?)\*\*', r'<b style="color:#333;font-weight:800">\1</b>', html)
+            # 引用 > text → blockquote
+            html = re.sub(r'^> (.+)$', r'<blockquote style="background:#f5f5f5;border-left:3px solid #999;padding:6px 10px;margin:6px 0;color:#555;font-size:12.5px;border-radius:0 4px 4px 0">\1</blockquote>', html, flags=re.MULTILINE)
+            # 无序列表 - item → <li>
+            html = re.sub(r'^- (.+)$', r'<li style="margin:3px 0 3px 16px;font-size:11.5px;line-height:1.55;color:#444">• \1</li>', html, flags=re.MULTILINE)
+            # 有序列表 1. item
+            html = re.sub(r'^(\d+)\. (.+)$', r'<li style="margin:3px 0 3px 16px;font-size:11.5px;line-height:1.55;color:#444"><b>\1.</b> \2</li>', html, flags=re.MULTILINE)
+            # 表格 | ... |
+            lines = html.split('\n')
+            in_table = False
+            new_lines = []
+            for line in lines:
+                stripped = line.strip()
+                if '|' in stripped and not stripped.startswith('<'):
+                    cells = [c.strip() for c in stripped.split('|')]
+                    cells = [c for c in cells if c]  # 去掉空的首尾
+                    if cells:
+                        if all(set(c) <= set('-: ') or c == '' for c in cells):
+                            continue  # skip separator row
+                        if not in_table:
+                            new_lines.append('<table style="width:100%;border-collapse:collapse;font-size:10.5px;margin:6px 0">')
+                            new_lines.append('<tr>' + ''.join(f'<th style="background:#37474f;color:#fff;padding:4px 5px;font-weight:700;text-align:center">{c}</th>' for c in cells) + '</tr>')
+                            in_table = True
+                        else:
+                            new_lines.append('<tr>' + ''.join(f'<td style="padding:4px 5px;border:1px solid #e0e0e0;text-align:center;color:#333">{c}</td>' for c in cells) + '</tr>')
+                else:
+                    if in_table:
+                        new_lines.append('</table>')
+                        in_table = False
+                    new_lines.append(line)
+            if in_table:
+                new_lines.append('</table>')
+            html = '\n'.join(new_lines)
+            # 段落换行
+            html = re.sub(r'\n{2,}', '</p><p style="margin:8px 0;font-size:12px;line-height:1.65;color:#333">', html)
+            html = '<p style="margin:8px 0;font-size:12px;line-height:1.65;color:#333">' + html + '</p>'
+            # 清理空段落
+            html = re.sub(r'<p[^>]*>\s*</p>', '', html)
+            return html
+
+        now_ts = ""
+        try:
+            from datetime import datetime
+            now_ts = datetime.now().strftime("%H:%M:%S")
+        except Exception:
+            pass
+
+        return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8">
+<style>
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6fa;color:#2d2926;font-size:14px}}
+.container{{max-width:640px;margin:0 auto;background:#fff}}
+.hd{{background:linear-gradient(135deg,#1a73e8,#4a90d9);color:#fff;padding:14px 18px 10px;border-bottom:3px solid #e8a838}}
+.hd h1{{font-size:17px;font-weight:900}}
+.hd .sub{{margin-top:4px;font-size:10.5px;opacity:.8;font-weight:600}}
+.body{{padding:12px 15px}}
+.sec{{background:#fff;border:1.2px solid #e8e8e8;border-radius:7px;margin:0 0 10px;overflow:hidden}}
+.sec-head{{padding:9px 14px 7px;border-bottom:1px solid #f0f0f0;font-weight:900;font-size:14px;color:#1a237e;display:flex;align-items:center;gap:5px}}
+.sec-body{{padding:10px 14px}}
+.ft{{text-align:center;font-size:10px;color:#bbb;padding:10px;border-top:1px solid #eee}}
+</style></head>
+<body>
+<div class="container">
+<div class="hd">
+<h1>{title}</h1>
+<div class="sub">{now_ts} | daily_stock_analysis</div>
+</div>
+<div class="sec"><div class="sec-body">{_md_to_html(content)}</div></div>
+<div class="ft">{now_ts}</div>
+</div></body></html>"""
+
     def generate_wechat_summary(self, results: List[AnalysisResult]) -> str:
         """
         生成企业微信精简版日报（控制在4000字符内）
@@ -2345,11 +2443,20 @@ class NotificationService(
         for channel in target_channels:
             # PushPlus：使用独立 HTML 模板渲染卡片式报告
             channel_content = content
-            if channel == NotificationChannel.PUSHPLUS and results:
-                html_content = self.generate_pushplus_html_report(results)
-                if html_content:
-                    channel_content = html_content
-                    logger.info("PushPlus 使用 HTML 卡片模板渲染报告（%d字符）", len(html_content))
+            if channel == NotificationChannel.PUSHPLUS:
+                if results:
+                    html_content = self.generate_pushplus_html_report(results)
+                    if html_content:
+                        channel_content = html_content
+                        logger.info("PushPlus 使用 HTML 卡片模板渲染报告（%d字符）", len(html_content))
+                elif content:
+                    # 大盘复盘、AlphaSift 等非 AnalysisResult 内容 → Markdown→HTML 卡片包装
+                    title = "📈 分析报告"
+                    first_line = content.split('\n')[0].lstrip('# ').strip()
+                    if first_line:
+                        title = first_line[:40]
+                    channel_content = self.wrap_markdown_as_html_card(title, content)
+                    logger.info("PushPlus 使用 HTML 包装（%d字符）", len(channel_content))
 
             channel_name = ChannelDetector.get_channel_name(channel)
             started_at = time.monotonic()
