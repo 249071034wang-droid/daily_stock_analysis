@@ -54,12 +54,18 @@ body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; bac
 
   {% for e in enriched %}
   {% set result = e.result %}
+  {% set ms = result.market_snapshot if result.market_snapshot else {} %}
   {% set dashboard = result.dashboard if result.dashboard else {} %}
   {% set core = dashboard.get('core_conclusion') or {} %}
-  {% set battle = dashboard.get('battle_plan') or {} %}
   {% set intel = dashboard.get('intelligence') or {} %}
   {% set i = loop.index %}
   {% set is_top3 = i <= 3 %}
+
+  {# 从 market_snapshot 提取行情数据 #}
+  {% set change_pct_val = result.change_pct %}
+  {% set volume_ratio_val = ms.get('volume_ratio') %}
+  {% set amount_raw = ms.get('amount') %}
+  {% set pe_val = ms.get('pe_ratio') %}
 
   <div class="card{% if is_top3 %} top3{% endif %}">
     <div class="card-top">
@@ -74,37 +80,37 @@ body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; bac
 
     <div class="metrics">
       <div class="metric">
-        <div class="val{% if (result.change_pct or 0) > 0 %} up{% elif (result.change_pct or 0) < 0 %} down{% endif %}">
-          {{ "{:+.1f}%".format(result.change_pct) if result.change_pct else '-' }}
+        <div class="val{% if (change_pct_val or 0) > 0 %} up{% elif (change_pct_val or 0) < 0 %} down{% endif %}">
+          {{ "{:+.1f}%".format(change_pct_val) if change_pct_val is not none else '-' }}
         </div>
         <div class="lbl">涨幅</div>
       </div>
       <div class="metric">
-        <div class="val">{{ "{:.2f}".format(result.volume_ratio) if result.volume_ratio else '-' }}</div>
+        <div class="val">{{ volume_ratio_val if volume_ratio_val else '-' }}</div>
         <div class="lbl">量比</div>
       </div>
       <div class="metric">
-        <div class="val">{{ "{:.1f}亿".format(result.amount/1e8) if result.amount else '-' }}</div>
+        <div class="val">{{ amount_raw if amount_raw else '-' }}</div>
         <div class="lbl">金额</div>
       </div>
       <div class="metric">
-        <div class="val">{{ "{:.1f}".format(result.pe_ratio) if result.pe_ratio else '-' }}</div>
+        <div class="val">{{ "{:.1f}".format(pe_val) if pe_val is not none else '-' }}</div>
         <div class="lbl">PE</div>
       </div>
     </div>
 
     {% set one_sentence = core.get('one_sentence', result.analysis_summary) if core else result.analysis_summary %}
     {% if one_sentence %}
-    <div class="reason">📌 {{ one_sentence[:100] }}</div>
+    <div class="reason">📌 {{ one_sentence[:120] }}</div>
     {% endif %}
 
     <div class="style-cat">
       {% if intel.get('style_fit') %}<b style="color:#9c27b0;">风格:</b> {{ intel.style_fit[:30] }} &nbsp; {% endif %}
-      {% if intel.get('positive_catalysts') %}<b style="color:#ff9800;">催化:</b> {{ intel.positive_catalysts[0][:25] if intel.positive_catalysts else '' }}{% endif %}
+      {% if intel.get('positive_catalysts') %}<b style="color:#ff9800;">催化:</b> {{ intel.positive_catalysts[0][:30] if intel.positive_catalysts else '' }}{% endif %}
     </div>
 
     {% if intel.get('risk_alerts') %}
-    <div class="risks">⚠️ 风险: {{ intel.risk_alerts[0][:35] if intel.risk_alerts else '' }}</div>
+    <div class="risks">⚠️ 风险: {{ intel.risk_alerts[0][:40] if intel.risk_alerts else '' }}</div>
     {% endif %}
 
     {% set factor_scores = dashboard.get('factor_scores') or {} %}

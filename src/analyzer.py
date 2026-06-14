@@ -3439,6 +3439,9 @@ class GeminiAnalyzer:
                 "price": self._format_price(realtime.get('price')),
                 "volume_ratio": realtime.get('volume_ratio', 'N/A'),
                 "turnover_rate": self._format_percent(realtime.get('turnover_rate')),
+                "pe_ratio": realtime.get('pe_ratio'),  # 市盈率(动态)
+                "total_mv": realtime.get('total_mv'),   # 总市值
+                "circ_mv": realtime.get('circ_mv'),     # 流通市值
                 "source": getattr(realtime.get('source'), 'value', realtime.get('source', 'N/A')),
             })
 
